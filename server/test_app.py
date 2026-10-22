@@ -98,6 +98,18 @@ class RoomTests(unittest.TestCase):
         self.assertNotEqual(private['code'], public['code'])
         self.assertEqual(self.call('/random', {})['code'], public['code'])
 
+    def test_public_room_directory_shows_only_open_public_rooms(self):
+        private = self.call('/rooms', {'kind': 'group'})
+        public = self.call('/random', {}, self.bob)
+        available = self.call('/public-rooms')['rooms']
+        self.assertEqual(len(available), 1)
+        self.assertEqual(available[0]['code'], public['code'])
+        self.assertEqual(available[0]['members'], 1)
+        self.assertNotEqual(available[0]['code'], private['code'])
+        with self.assertRaises(ApiError) as error:
+            self.store.request('GET', '/public-rooms', {}, '')
+        self.assertEqual(error.exception.status, 401)
+
     def test_capacity_is_atomic_under_simultaneous_joins(self):
         room = self.call('/rooms', {'kind': 'group'})
         users = [self.bob] + [self.register(f'user{i}') for i in range(8)]

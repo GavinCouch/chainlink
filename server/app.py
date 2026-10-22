@@ -96,6 +96,17 @@ class Store:
                               'WHERE sessions.token=?', (digest,)).fetchone()
             require(user is not None, 'Please log in again.', 401)
             uid = user['id']
+            # Discover only open public rooms, never private/solo room codes.
+            if method == 'GET' and path == '/public-rooms':
+                rows = db.execute('''
+                    SELECT rooms.code, COUNT(members.user_id) AS members
+                    FROM rooms JOIN members ON rooms.code = members.code
+                    WHERE rooms.kind = 'random'
+                    GROUP BY rooms.code
+                    HAVING COUNT(members.user_id) < 8
+                    ORDER BY rooms.created DESC LIMIT 20
+                ''').fetchall()
+                return {'rooms': [dict(row) for row in rows]}
             if method == 'POST' and path == '/logout':
                 db.execute('DELETE FROM sessions WHERE token=?', (digest,))
                 db.execute('DELETE FROM members WHERE user_id=?', (uid,))
