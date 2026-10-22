@@ -33,6 +33,45 @@ class RoomTests(unittest.TestCase):
         self.call('/join', {'code': room['code']}, self.bob)
         return room
 
+    def test_flashcards_persist_without_room_and_are_private(self):
+        payload = {'title': ' TCP ', 'subject': ' Networks ',
+                   'cards': [{'front': ' SYN? ', 'back': ' Starts a connection. '}]}
+        saved = self.call('/flashcards/save', payload)['set']
+        self.assertEqual(saved['title'], 'TCP')
+        self.assertEqual(saved['cards'][0]['front'], 'SYN?')
+        self.assertEqual(self.call('/flashcards', user=self.bob)['sets'], [])
+        for endpoint in ('/flashcards/save', '/flashcards/delete'):
+            with self.assertRaises(ApiError) as error:
+                self.call(endpoint, {**payload, 'id': saved['id']}, self.bob)
+            self.assertEqual(error.exception.status, 404)
+        updated = self.call('/flashcards/save', {**payload, 'id': saved['id'],
+                                               'title': 'TCP basics'})['set']
+        self.assertEqual(updated['id'], saved['id'])
+        reopened = Store(self.store.path)
+        self.assertEqual(reopened.request('GET', '/flashcards', {}, self.alice['token'])
+                         ['sets'][0]['title'], 'TCP basics')
+        self.call('/rooms', {'kind': 'solo'})
+        self.call('/leave', {})
+        self.assertEqual(len(self.call('/flashcards')['sets']), 1)
+        self.call('/flashcards/delete', {'id': saved['id']})
+        self.assertEqual(self.call('/flashcards')['sets'], [])
+
+    def test_flashcards_validate_entire_set_before_saving(self):
+        valid = {'title': 'Math', 'subject': '',
+                 'cards': [{'front': '2 + 2', 'back': '4'}]}
+        invalid = [dict(valid, title=' '), dict(valid, subject=42),
+                   dict(valid, cards=[]), dict(valid, cards=valid['cards'] * 51),
+                   dict(valid, cards=[{'front': '', 'back': '4'}]),
+                   dict(valid, cards=[{'front': 'x', 'back': 'x' * 1001}]),
+                   dict(valid, cards=[None]), dict(valid, id=[])]
+        for payload in invalid:
+            with self.subTest(payload=payload), self.assertRaises(ApiError):
+                self.call('/flashcards/save', payload)
+        self.assertEqual(self.call('/flashcards')['sets'], [])
+        with self.assertRaises(ApiError) as error:
+            self.store.request('GET', '/flashcards', {}, '')
+        self.assertEqual(error.exception.status, 401)
+
     def test_credentials_and_revocation(self):
         with self.store.connect() as db:
             stored = db.execute('SELECT password FROM users LIMIT 1').fetchone()[0]

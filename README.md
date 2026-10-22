@@ -15,7 +15,7 @@ A Flutter Android app for studying alone, alongside new people, or with friends 
 
 ## Run locally
 
-Requires Flutter 3.47.3 / Dart 3.13.3 or compatible newer versions, Python 3.10+, and the Android SDK for Android builds.
+Requires Flutter with Dart 3.13.2 or compatible newer versions, Python 3.10+, and the Android SDK for Android builds.
 
 Start the backend from this directory:
 
@@ -87,3 +87,7 @@ Integration references: [Flutter networking](https://docs.flutter.dev/cookbook/n
 The interface uses white, charcoal, and a small blue accent for links and status. The home screen prioritizes room-code entry, followed by three direct actions. Study and Chat have separate tabs; break and notification settings appear when requested. Copy names the action or state without motivational slogans. Decorative heroes, orbit graphics, promotional feature cards, colored panels, and pill-shaped status badges have been removed.
 
 Research used for this revision: [NN/g on aesthetic and minimalist design](https://www.nngroup.com/articles/aesthetic-minimalist-design/) and [visual hierarchy](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/). Both support reducing irrelevant content and using hierarchy to prioritize useful controls. The [InterfaceKit critique of generated interfaces](https://blog.interfacekit.io/what-makes-a-website-look-ai-generated) also emphasizes product-specific structure and reviewing real interactions, rather than treating any individual color or component as inherently wrong.
+
+## Flashcards
+
+Flashcards are available from home and inside solo/group sessions. Create, edit, and delete personal sets with an optional subject and up to 50 question/answer cards. Sets persist per account in SQLite, independently of rooms. Review hides answers until revealed and supports self-assessed recall, shuffled restarts, a per-round score, and practice of missed cards. Scores are session-only; sets remain private to their owner.

@@ -45,6 +45,9 @@ class Store:
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL,
                     user_id TEXT NOT NULL, name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS flashcard_sets (
+                    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL,
+                    subject TEXT NOT NULL, cards TEXT NOT NULL, updated REAL NOT NULL);
             ''')
 
     @contextmanager
@@ -96,6 +99,50 @@ class Store:
                               'WHERE sessions.token=?', (digest,)).fetchone()
             require(user is not None, 'Please log in again.', 401)
             uid = user['id']
+            # Personal study material persists independently of room membership.
+            if method == 'GET' and path == '/flashcards':
+                rows = db.execute('SELECT * FROM flashcard_sets WHERE user_id=? '
+                                  'ORDER BY updated DESC, id', (uid,)).fetchall()
+                return {'sets': [self.flashcard_set(row) for row in rows]}
+            if method == 'POST' and path == '/flashcards/save':
+                title, subject, cards = data.get('title'), data.get('subject'), data.get('cards')
+                require(isinstance(title, str) and 1 <= len(title.strip()) <= 80,
+                        'Give your set a title of 1–80 characters.')
+                require(isinstance(subject, str) and len(subject.strip()) <= 60,
+                        'Subject must be at most 60 characters.')
+                require(isinstance(cards, list) and 1 <= len(cards) <= 50,
+                        'Add between 1 and 50 cards.')
+                cleaned = []
+                for card in cards:
+                    require(isinstance(card, dict), 'Each card needs a question and answer.')
+                    front, back = card.get('front'), card.get('back')
+                    require(isinstance(front, str) and 1 <= len(front.strip()) <= 500,
+                            'Questions must be 1–500 characters.')
+                    require(isinstance(back, str) and 1 <= len(back.strip()) <= 1000,
+                            'Answers must be 1–1000 characters.')
+                    cleaned.append({'front': front.strip(), 'back': back.strip()})
+                set_id = data.get('id')
+                if set_id is not None:
+                    require(isinstance(set_id, str), 'Invalid set ID.')
+                    require(db.execute('SELECT 1 FROM flashcard_sets WHERE id=? AND user_id=?',
+                                       (set_id, uid)).fetchone() is not None, 'Set not found.', 404)
+                    db.execute('UPDATE flashcard_sets SET title=?, subject=?, cards=?, updated=? '
+                               'WHERE id=? AND user_id=?',
+                               (title.strip(), subject.strip(), json.dumps(cleaned), now, set_id, uid))
+                else:
+                    require(db.execute('SELECT COUNT(*) FROM flashcard_sets WHERE user_id=?',
+                                       (uid,)).fetchone()[0] < 100, 'You can save up to 100 sets.')
+                    set_id = secrets.token_hex(16)
+                    db.execute('INSERT INTO flashcard_sets VALUES (?, ?, ?, ?, ?, ?)',
+                               (set_id, uid, title.strip(), subject.strip(), json.dumps(cleaned), now))
+                return {'set': self.flashcard_set(db.execute(
+                    'SELECT * FROM flashcard_sets WHERE id=?', (set_id,)).fetchone())}
+            if method == 'POST' and path == '/flashcards/delete':
+                require(isinstance(data.get('id'), str), 'Invalid set ID.')
+                deleted = db.execute('DELETE FROM flashcard_sets WHERE id=? AND user_id=?',
+                                     (data['id'], uid))
+                require(deleted.rowcount == 1, 'Set not found.', 404)
+                return {'ok': True}
             if method == 'POST' and path == '/logout':
                 db.execute('DELETE FROM sessions WHERE token=?', (digest,))
                 db.execute('DELETE FROM members WHERE user_id=?', (uid,))
@@ -149,6 +196,11 @@ class Store:
                 raise ApiError(404, 'Endpoint not found.')
             return self.snapshot(db, uid, now)
 
+    @staticmethod
+    def flashcard_set(row):
+        return {'id': row['id'], 'title': row['title'], 'subject': row['subject'],
+                'cards': json.loads(row['cards'])}
+
     def snapshot(self, db, uid, now):
         member = db.execute('SELECT * FROM members WHERE user_id=?', (uid,)).fetchone()
         code = member['code']
@@ -199,7 +251,8 @@ def make_handler(store):
         def handle_request(self):
             try:
                 size = int(self.headers.get('Content-Length', '0'))
-                require(0 <= size <= 16384, 'Request too large.', 413)
+                limit = 524288 if self.path == '/flashcards/save' else 16384
+                require(0 <= size <= limit, 'Request too large.', 413)
                 data = json.loads(self.rfile.read(size)) if size else {}
                 require(isinstance(data, dict), 'Expected a JSON object.')
                 token = self.headers.get('Authorization', '').removeprefix('Bearer ')

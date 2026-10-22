@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'study_session.dart';
+import 'flashcards.dart';
 
 const ink = Color(0xFF18191C);
 const muted = Color(0xFF6B6E76);
@@ -585,6 +586,19 @@ class _StudyHomeState extends State<StudyHome> {
     }
   }
 
+  void openFlashcards() => Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => FlashcardsPage(api: session.api)),
+  );
+
+  Widget flashcardsOption() => ListTile(
+    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+    leading: const Icon(Icons.style_outlined),
+    title: const Text('Flashcards'),
+    subtitle: const Text('Create study sets and practice your recall.'),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: session.busy ? null : openFlashcards,
+  );
+
   Widget lobbyView() => SingleChildScrollView(
     key: const ValueKey('lobby'),
     padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -636,6 +650,8 @@ class _StudyHomeState extends State<StudyHome> {
           'Start a private session.',
           'solo',
         ),
+        const Divider(),
+        flashcardsOption(),
         const Divider(),
       ],
     ),
@@ -784,6 +800,8 @@ class _StudyHomeState extends State<StudyHome> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       focusSection(),
+                      const SizedBox(height: 16),
+                      flashcardsOption(),
                       const SizedBox(height: 28),
                       const Divider(),
                       musicSection(),
