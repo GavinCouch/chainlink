@@ -116,7 +116,16 @@ void main() {
     expect(find.text('On break'), findsOneWidget);
     await tester.tap(find.text('Chat'));
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 3));
+    await session.refresh();
     await tester.pump();
+    expect(find.text('No messages yet.').hitTestable(), findsOneWidget);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Message'),
+      'Test message',
+    );
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Test message'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     session.dispose();
