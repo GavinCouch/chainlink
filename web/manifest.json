@@ -1,0 +1,19 @@
+{
+  "name": "Chainlink",
+  "short_name": "Chainlink",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#18191C",
+  "description": "Study rooms, chat, and shared breaks.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "chainlink.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
