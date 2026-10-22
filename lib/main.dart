@@ -6,8 +6,10 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'study_session.dart';
+import 'login_screen.dart';
+
 
 const ink = Color(0xFF18191C);
 const muted = Color(0xFF6B6E76);
@@ -21,8 +23,13 @@ const titleStyle = TextStyle(
 );
 const sectionStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ChainlinkApp());
+  await supabase.initialize(
+    url: 'https://srbnducvnwthlmqwpnfu.supabase.co',
+    plubishablKey:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyYm5kdWN2bnd0aGxtcXdwbmZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDM3NTcsImV4cCI6MjEwODI3OTc1N30.u7lDwrlU-T1r7r_riWtVvzRmBmMwDalYbTqUrl8yfRc
+  )
   runApp(const ChainlinkApp());
 }
 
@@ -33,6 +40,9 @@ class ChainlinkApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'Chainlink',
     debugShowCheckedModeBanner: false,
+    home: Supabase.instance.client.auth.currentSession == null
+        ? const LoginScreen();
+        : const HomeScreen()
     theme: ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: Colors.white,

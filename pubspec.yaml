@@ -5,6 +5,7 @@ version: 0.1.0+1
 environment:
   sdk: ^3.13.3
 dependencies:
+supabase_flutter: ^2.0.0
   flutter:
     sdk: flutter
   http: ^1.6.0
