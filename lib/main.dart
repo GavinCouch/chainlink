@@ -8,12 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'study_session.dart';
+import 'cafe_home_screen.dart';
 
-const ink = Color(0xFF18191C);
-const muted = Color(0xFF6B6E76);
-const line = Color(0xFFE7E8EB);
-const accent = Color(0xFF3159CF);
-const surface = Color(0xFFF5F6F8);
+const ink = Color(0xFF4B3B34);
+const muted = Color(0xFF92867A);
+const line = Color(0xFFEAE2D6);
+const accent = Color(0xFF8B654D);
+const surface = Color(0xFFF8F5EE);
 const titleStyle = TextStyle(
   fontSize: 28,
   fontWeight: FontWeight.w600,
@@ -35,16 +36,16 @@ class ChainlinkApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: Colors.white,
+      scaffoldBackgroundColor: surface,
       colorScheme: const ColorScheme.light(
         primary: accent,
         onPrimary: Colors.white,
         secondary: ink,
-        secondaryContainer: surface,
+        secondaryContainer: const Color(0xFFE5EBDF),
         onSecondaryContainer: ink,
-        surface: Colors.white,
+        surface: const Color(0xFFFFFDF9),
         onSurface: ink,
-        outline: Color(0xFFC9CBD1),
+        outline: Color(0xFFD6C9B9),
         surfaceContainerHighest: surface,
       ),
       textTheme: ThemeData.light().textTheme.apply(
@@ -143,7 +144,7 @@ class _StudyHomeState extends State<StudyHome> {
   final name = TextEditingController(),
       email = TextEditingController(),
       password = TextEditingController();
-  final code = TextEditingController(), message = TextEditingController();
+  final message = TextEditingController();
   final chatScroll = ScrollController();
   final form = GlobalKey<FormState>();
   final music = AudioPlayer(), chime = AudioPlayer();
@@ -185,7 +186,6 @@ class _StudyHomeState extends State<StudyHome> {
     if (invite == null || invite == session.room?['code']) return;
     setState(() {
       pendingInvite = invite;
-      code.text = invite;
     });
     if (session.room != null) {
       toast('Invite to $invite. Leave the current room to join.');
@@ -308,7 +308,7 @@ class _StudyHomeState extends State<StudyHome> {
     links?.cancel();
     session.removeListener(onSession);
     if (widget.session == null) session.dispose();
-    for (final controller in [name, email, password, code, message]) {
+    for (final controller in [name, email, password, message]) {
       controller.dispose();
     }
     chatScroll.dispose();
@@ -382,7 +382,7 @@ class _StudyHomeState extends State<StudyHome> {
           constraints: const BoxConstraints(maxWidth: 680),
           child: Column(
             children: [
-              Padding(
+              if (session.user == null || session.room != null) Padding(
                 padding: const EdgeInsets.fromLTRB(24, 12, 16, 12),
                 child: Row(
                   children: [
@@ -434,7 +434,7 @@ class _StudyHomeState extends State<StudyHome> {
               ),
               if (session.busy)
                 const LinearProgressIndicator(minHeight: 1, color: accent)
-              else
+              else if (session.user == null || session.room != null)
                 const Divider(),
               Expanded(
                 child: session.user == null
@@ -585,95 +585,16 @@ class _StudyHomeState extends State<StudyHome> {
     }
   }
 
-  Widget lobbyView() => SingleChildScrollView(
-    key: const ValueKey('lobby'),
-    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text('Study rooms', style: titleStyle),
-        const SizedBox(height: 8),
-        const Text(
-          'Join with a code, or start a session.',
-          style: TextStyle(color: muted, fontSize: 15),
-        ),
-        const SizedBox(height: 32),
-        fieldLabel('Room code or invite link'),
-        TextField(
-          controller: code,
-          textCapitalization: TextCapitalization.characters,
-          autocorrect: false,
-          decoration: const InputDecoration(
-            hintText: 'Enter code',
-            prefixIcon: Icon(Icons.tag, size: 20),
-          ),
-          onSubmitted: (_) => joinCode(),
-        ),
-        const SizedBox(height: 12),
-        FilledButton(
-          onPressed: session.busy ? null : joinCode,
-          child: const Text('Join room'),
-        ),
-        const SizedBox(height: 36),
-        const Divider(),
-        roomOption(
-          Icons.add,
-          'Create room',
-          'Invite your group with a code.',
-          'group',
-        ),
-        const Divider(),
-        roomOption(
-          Icons.people_outline,
-          'Find a group',
-          'Join an available public room.',
-          'random',
-        ),
-        const Divider(),
-        roomOption(
-          Icons.person_outline,
-          'Study solo',
-          'Start a private session.',
-          'solo',
-        ),
-        const Divider(),
-      ],
-    ),
+  Widget lobbyView() => CafeHomeScreen(
+    key: const ValueKey('cafe-lobby'),
+    session: session,
+    inviteCode: pendingInvite,
+    onJoinCode: (validCode) async {
+      await session.join('join', code: validCode);
+    },
+    onLogout: () => session.logout(),
+    onToast: toast,
   );
-
-  Widget roomOption(
-    IconData icon,
-    String title,
-    String subtitle,
-    String mode,
-  ) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-    leading: Icon(icon, color: ink, size: 23),
-    minLeadingWidth: 24,
-    horizontalTitleGap: 16,
-    title: Text(
-      title,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-    ),
-    subtitle: Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Text(
-        subtitle,
-        style: const TextStyle(color: muted, fontSize: 13, height: 1.4),
-      ),
-    ),
-    trailing: const Icon(Icons.chevron_right, size: 20, color: muted),
-    onTap: session.busy ? null : () => session.join(mode),
-  );
-
-  void joinCode() {
-    final parsed = roomCodeFrom(code.text);
-    if (parsed == null) {
-      toast('Enter a valid 6-character code or invite link.');
-      return;
-    }
-    session.join('join', code: parsed);
-  }
 
   Widget roomView() {
     final room = session.room!;
