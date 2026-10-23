@@ -5,9 +5,9 @@ version: 0.1.0+1
 environment:
   sdk: ^3.13.3
 dependencies:
-supabase_flutter: ^2.0.0
   flutter:
     sdk: flutter
+  supabase_flutter: ^2.0.0
   http: ^1.6.0
   audioplayers: ^6.8.1
   app_links: ^7.2.2

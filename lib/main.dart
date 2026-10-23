@@ -10,7 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'study_session.dart';
 import 'login_screen.dart';
 
-
+// --- COLORS & STYLES ---
 const ink = Color(0xFF18191C);
 const muted = Color(0xFF6B6E76);
 const line = Color(0xFFE7E8EB);
@@ -23,122 +23,126 @@ const titleStyle = TextStyle(
 );
 const sectionStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
 
+// --- MAIN APP SETUP ---
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ChainlinkApp());
-  await supabase.initialize(
+  
+  await Supabase.initialize(
     url: 'https://srbnducvnwthlmqwpnfu.supabase.co',
-    plubishablKey:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyYm5kdWN2bnd0aGxtcXdwbmZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDM3NTcsImV4cCI6MjEwODI3OTc1N30.u7lDwrlU-T1r7r_riWtVvzRmBmMwDalYbTqUrl8yfRc
-  )
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyYm5kdWN2bnd0aGxtcXdwbmZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDM3NTcsImV4cCI6MjEwODI3OTc1N30.u7lDwrlU-T1r7r_riWtVvzRmBmMwDalYbTqUrl8yfRc', 
+  );
+
   runApp(const ChainlinkApp());
 }
 
 class ChainlinkApp extends StatelessWidget {
-  final StudySession? session;
-  const ChainlinkApp({super.key, this.session});
+  const ChainlinkApp({super.key});
+
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'Chainlink',
-    debugShowCheckedModeBanner: false,
-    home: Supabase.instance.client.auth.currentSession == null
-        ? const LoginScreen();
-        : const HomeScreen()
-    theme: ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: Colors.white,
-      colorScheme: const ColorScheme.light(
-        primary: accent,
-        onPrimary: Colors.white,
-        secondary: ink,
-        secondaryContainer: surface,
-        onSecondaryContainer: ink,
-        surface: Colors.white,
-        onSurface: ink,
-        outline: Color(0xFFC9CBD1),
-        surfaceContainerHighest: surface,
-      ),
-      textTheme: ThemeData.light().textTheme.apply(
-        bodyColor: ink,
-        displayColor: ink,
-      ),
-      dividerTheme: const DividerThemeData(color: line, thickness: 1, space: 1),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Chainlink',
+      debugShowCheckedModeBanner: false,
+      // Supabase checks if a user is logged in. If yes -> StudyHome. If no -> LoginScreen.
+      home: Supabase.instance.client.auth.currentSession == null
+          ? const LoginScreen()
+          : const StudyHome(), 
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
+        colorScheme: const ColorScheme.light(
+          primary: accent,
+          onPrimary: Colors.white,
+          secondary: ink,
+          secondaryContainer: surface,
+          onSecondaryContainer: ink,
+          surface: Colors.white,
+          onSurface: ink,
+          outline: Color(0xFFC9CBD1),
+          surfaceContainerHighest: surface,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+        textTheme: ThemeData.light().textTheme.apply(
+          bodyColor: ink,
+          displayColor: ink,
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: accent, width: 1.5),
+        dividerTheme: const DividerThemeData(color: line, thickness: 1, space: 1),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: accent, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          hintStyle: const TextStyle(color: muted, fontSize: 15),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: ink,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(0, 48),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
         ),
-        hintStyle: const TextStyle(color: muted, fontSize: 15),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: ink,
+            minimumSize: const Size(0, 48),
+            side: const BorderSide(color: line),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(foregroundColor: accent),
+        ),
+        sliderTheme: const SliderThemeData(
+          activeTrackColor: ink,
+          thumbColor: ink,
+          inactiveTrackColor: line,
+          trackHeight: 3,
+        ),
+        segmentedButtonTheme: SegmentedButtonThemeData(
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? ink : Colors.white,
+            ),
+            foregroundColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? Colors.white : ink,
+            ),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ),
+        tabBarTheme: const TabBarThemeData(
+          labelColor: ink,
+          unselectedLabelColor: muted,
+          indicatorColor: ink,
+          dividerColor: line,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        snackBarTheme: const SnackBarThemeData(
           backgroundColor: ink,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(0, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          behavior: SnackBarBehavior.floating,
         ),
       ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: ink,
-          minimumSize: const Size(0, 48),
-          side: const BorderSide(color: line),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: accent),
-      ),
-      sliderTheme: const SliderThemeData(
-        activeTrackColor: ink,
-        thumbColor: ink,
-        inactiveTrackColor: line,
-        trackHeight: 3,
-      ),
-      segmentedButtonTheme: SegmentedButtonThemeData(
-        style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.resolveWith(
-            (states) =>
-                states.contains(WidgetState.selected) ? ink : Colors.white,
-          ),
-          foregroundColor: WidgetStateProperty.resolveWith(
-            (states) =>
-                states.contains(WidgetState.selected) ? Colors.white : ink,
-          ),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-      ),
-      tabBarTheme: const TabBarThemeData(
-        labelColor: ink,
-        unselectedLabelColor: muted,
-        indicatorColor: ink,
-        dividerColor: line,
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-      ),
-      snackBarTheme: const SnackBarThemeData(
-        backgroundColor: ink,
-        behavior: SnackBarBehavior.floating,
-      ),
-    ),
-    home: StudyHome(session: session),
-  );
+    );
+  }
 }
 
 class StudyHome extends StatefulWidget {
