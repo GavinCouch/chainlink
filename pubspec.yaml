@@ -3,7 +3,7 @@ description: Study together with room codes, quiet music, shared breaks, and cha
 publish_to: none
 version: 0.1.0+1
 environment:
-  sdk: ^3.13.3
+  sdk: '>=3.0.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter

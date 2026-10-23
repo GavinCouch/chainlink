@@ -113,7 +113,7 @@ class StudySession extends ChangeNotifier {
       perform(() async {
         final result = await api.request(
           name == null ? '/login' : '/register',
-          {'email': email, 'password': password, 'name': ?name},
+          {'email': email, 'password': password, 'name': name},
         );
         api.token = result['token'] as String;
         user = result['user'] as Map<String, dynamic>;
@@ -125,7 +125,7 @@ class StudySession extends ChangeNotifier {
         : mode == 'random'
         ? '/random'
         : '/rooms';
-    room = await api.request(path, {'kind': mode, 'code': ?code});
+    room = await api.request(path, {'kind': mode, 'code': code});
     connectionError = null;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 2), (_) => refresh());
