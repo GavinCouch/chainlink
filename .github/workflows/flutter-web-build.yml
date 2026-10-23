@@ -1,0 +1,41 @@
+name: Chainlink Flutter Web Build
+
+on:
+  push:
+    branches:
+      - feature/cozy-cafe-dashboard
+  pull_request:
+    branches:
+      - study-room-mvp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-web:
+    name: Build Flutter web app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Flutter web (release)
+        run: flutter build web --release
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chainlink-web-build
+          path: build/web/
+          if-no-files-found: error
+          retention-days: 14
